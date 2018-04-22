@@ -16,10 +16,10 @@ function compare (str1, str2, idx1 = 0, idx2 = 0) {
 }
 
 export default class ParseCtrl {
-	constructor (text) {
+	constructor (text, idx = 0) {
 		this.text = text;
-		this.idx = 0;
-		this.stack = [];
+		this.idx = idx;
+		this.stack = [{type: "root", children: []}];
 		Object.defineProperty(this.stack, "empty", {
 			get () {
 				return this.length === 0;
@@ -29,11 +29,17 @@ export default class ParseCtrl {
 			return this.stack[this.stack.length - 1];
 		};
 	}
+	add (node) {
+		this.node.children.push(node);
+	}
 	get (length = 1, shift = 0) {
 		if (length === 1) {
 			return this.text.charAt(this.idx + shift);
 		}
 		return this.text.substr(this.idx + shift, length);
+	}
+	get node () {
+		return this.stack[this.stack.length - 1];
 	}
 	move (shift = 1) {
 		this.idx += shift;
