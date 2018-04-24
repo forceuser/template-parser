@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+	<head>
+		<title>HEADE</title>
+	</head>
+	<body>
+		<script src="./dist/parse.js"></script>
+		<script>
+			console.log("parse", parse(
+				`<div @prfix:attr="val" attr-x="{{express}}">
+					{{#list items as item}}
+						innerText {{item.name}}
+					{{/list}}
+				</div>`
+			));
+		</script>
+	</body>
+</html>

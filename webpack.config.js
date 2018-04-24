@@ -3,12 +3,12 @@ const path = require("path");
 
 module.exports = {
 	entry: {
-		"template": path.resolve(__dirname, "./index.js"),
+		"parse": path.resolve(__dirname, "./cjs-entry.js"),
 	},
 	output: {
 		path: path.resolve(__dirname, "./dist"),
 		filename: "[name].js",
-		library: "template",
+		library: "parse",
 		libraryTarget: "umd",
 	},
 	devtool: "source-map",
@@ -24,16 +24,6 @@ module.exports = {
 				},
 			}],
 		}],
-		// loaders: [
-		// 	{
-		// 		test: require.resolve("tinymce/tinymce"),
-		// 		loaders: ["imports?this=>window", "exports?window.tinymce"],
-		// 	},
-		// 	{
-		// 		test: /tinymce\/(themes|plugins)\//,
-		// 		loaders: ["imports?this=>window"],
-		// 	},
-		// ],
 	},
 	plugins: [
 	],

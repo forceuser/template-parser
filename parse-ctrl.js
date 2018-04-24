@@ -2,7 +2,7 @@ export default class ParseCtrl {
 	constructor (text, idx = 0) {
 		this.text = text;
 		this.idx = idx;
-		this.root = {type: "root", children: []};
+		this.root = {type: "root", children: [], start: idx, end: text.length};
 		this.stack = [this.root];
 		this.copyStack = [];
 		Object.defineProperty(this.stack, "empty", {
@@ -14,17 +14,34 @@ export default class ParseCtrl {
 			return this.stack[this.stack.length - 1];
 		};
 	}
-	add (nodeType, params) {
-		const node = Object.assign({}, params, {nodeType});
+	regexp (s, flags = "") {
+	    return new RegExp(s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), flags);
+	}
+	add (type, params) {
+		const ctrl = this;
+		const node = Object.assign({children: [], start: this.lastIdx, end: this.idx, data: {}}, params, {type});
+		Object.defineProperty(node, "text", {
+			get () {
+				return ctrl.text.substring(node.start, node.end || ctrl.text.length);
+			},
+		});
 		this.node.children.push(node);
+		return node;
 	}
 	start (...args) {
 		const node = this.add(...args);
 		this.stack.push(node);
+		node.start = this.idx;
+		node.end = null;
 		return node;
 	}
-	end () {
-		return this.stack.pop();
+	end (params) {
+		const node = this.stack.pop();
+		if (params) {
+			Object.assign(node, params);
+		}
+		node.end = this.idx;
+		return node;
 	}
 	get (length, shift = 0) {
 		if (length === 1) {
@@ -43,11 +60,13 @@ export default class ParseCtrl {
 		return this.stack[this.stack.length - 1];
 	}
 	go (shift = 1) {
+		this.lastIdx = this.idx;
 		this.idx += shift;
 		this.moved = true;
 		return this;
 	}
 	next () {
+		this.lastIdx = this.idx;
 		if (!this.moved) {
 			this.idx++;
 		}
