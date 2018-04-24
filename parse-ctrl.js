@@ -15,7 +15,7 @@ export default class ParseCtrl {
 		};
 	}
 	regexp (s, flags = "") {
-	    return new RegExp(s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), flags);
+		return new RegExp(s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), flags);
 	}
 	add (type, params) {
 		const ctrl = this;
