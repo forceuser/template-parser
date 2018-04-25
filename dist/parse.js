@@ -92,6 +92,9 @@ module.exports = __webpack_require__(1).default;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 exports.default = parse;
 
 var _parseCtrl = __webpack_require__(2);
@@ -149,10 +152,11 @@ function parse(text) {
 		startAttr: function startAttr() {
 			var match = ctrl.match(/^(@[a-z]+)?:?([a-z-]+)?(?:=(["']))?/i);
 			if (match && match[0]) {
-				var full = match["0"],
-				    prefix = match["1"],
-				    attr = match["2"],
-				    quote = match["3"];
+				var _match = _slicedToArray(match, 4),
+				    full = _match[0],
+				    prefix = _match[1],
+				    attr = _match[2],
+				    quote = _match[3];
 
 				if (quote) {
 					ctrl.start("attr", { data: { attr: attr, prefix: prefix, quote: quote } });
@@ -204,7 +208,14 @@ function parse(text) {
 				    control = match["1"],
 				    expression = match["2"];
 
-				ctrl.go(full.length).add("expression", { data: { expression: expression, control: control } });
+				var fn = void 0;
+				var args = void 0;
+				if (control === "#") {
+					var _match2 = expression.match(/^([a-z]+(?:-[a-z]*)*)\s?(.*)/i);
+					fn = _match2[1];
+					args = _match2[2];
+				}
+				ctrl.go(full.length).add("expression", { data: { expression: expression, control: control, fn: fn, args: args } });
 			}
 		}
 	};

@@ -51,7 +51,7 @@ export default function parse (text) {
 		startAttr () {
 			const match = ctrl.match(/^(@[a-z]+)?:?([a-z-]+)?(?:=(["']))?/i);
 			if (match && match[0]) {
-				const {"0": full, "1": prefix, "2": attr, "3": quote} = match;
+				const [full, prefix, attr, quote] = match;
 				if (quote) {
 					ctrl.start("attr", {data: {attr, prefix, quote}});
 					ctrl.go(full.length);
@@ -102,7 +102,14 @@ export default function parse (text) {
 			const match = ctrl.match(new RegExp(`^${startExp}(#|/)?(.*?)${endExp}`));
 			if (match) {
 				const {"0": full, "1": control, "2": expression} = match;
-				ctrl.go(full.length).add("expression", {data: {expression, control}});
+				let fn;
+				let args;
+				if (control === "#") {
+					const match = expression.match(/^([a-z]+(?:-[a-z]*)*)\s?(.*)/i);
+					fn = match[1];
+					args = match[2];
+				}
+				ctrl.go(full.length).add("expression", {data: {expression, control, fn, args}});
 			}
 		},
 	};
