@@ -1,3 +1,14 @@
+function getLineNumber (str, idx) {
+	const lines = str.split("\n").map(s => s.length);
+	let lc = 0;
+	let i = 0;
+	while (lc < idx && i < lines.length) {
+		lc += lines[i];
+		i++;
+	}
+	return i - 1;
+}
+
 export default class ParseCtrl {
 	constructor (text, idx = 0) {
 		this.text = text;
@@ -32,6 +43,7 @@ export default class ParseCtrl {
 		const node = this.add(...args);
 		this.stack.push(node);
 		node.start = this.idx;
+		node.lineStart = getLineNumber(this.text, node.start);
 		node.end = null;
 		return node;
 	}
@@ -41,6 +53,7 @@ export default class ParseCtrl {
 			Object.assign(node, params);
 		}
 		node.end = this.idx;
+		node.lineEnd = getLineNumber(this.text, node.end);
 		return node;
 	}
 	get (length, shift = 0) {
