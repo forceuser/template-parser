@@ -1,4 +1,4 @@
-import fs from "fs-promise";
+import fs from "fs-extra";
 import {createHarness} from "tape";
 import Test from "tape/lib/test";
 

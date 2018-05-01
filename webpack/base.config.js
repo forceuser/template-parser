@@ -1,17 +1,17 @@
 /* global __dirname */
 const path = require("path");
 
-module.exports = {
+module.exports = ({
 	entry: {
-		"parse": path.resolve(__dirname, "../src/cjs-entry.js"),
+		"template": path.resolve(__dirname, "../src/cjs-entry.js"),
 	},
 	output: {
-		path: path.resolve(__dirname, "./dist"),
+		path: path.resolve(__dirname, "../dist"),
 		filename: "[name].js",
-		library: "parse",
+		library: "template",
 		libraryTarget: "umd",
 	},
-	devtool: "source-map",
+	devtool: "source-map",	
 	module: {
 		rules: [{
 			test: /\.js$/,
@@ -19,13 +19,11 @@ module.exports = {
 			use: [{
 				loader: "babel-loader",
 				options: {
-					presets: ["@babel/preset-env"],
-					plugins: [
-					],
+					babelrc: true,
 				},
 			}],
 		}],
 	},
 	plugins: [
 	],
-};
+});
