@@ -7,7 +7,7 @@ function evaluate (model) {
 			value = getter();
 			chainIdx = 1;
 		}
-		finally {/**/}
+		finally {/* read variable from local scope if it is declared */}
 
 		if (chainIdx === 0) {
 			let i = scopeStack.length - 1;
@@ -49,7 +49,7 @@ function evaluate (model) {
 				setter(value);
 			}
 		}
-		finally {/**/}
+		finally {/* read variable from local scope if it is declared */}
 
 		if (chainIdx === 0) {
 			let i = scopeStack.length - 1;

@@ -11,7 +11,7 @@ export default function parse (text) {
 				const match = ctrl.match(/^<([a-z](-?[a-z])*)/i);
 				if (match) {
 					const tagName = match[1];
-					ctrl.start("tag", {data: {tagName, open: true}});
+					ctrl.start("tag", { data: { tagName, open: true } });
 					ctrl.go(tagName.length + 1);
 					return true;
 				}
@@ -19,7 +19,9 @@ export default function parse (text) {
 					const matchClose = ctrl.match(/^<\/([a-z](-?[a-z])*)>/i);
 					if (matchClose) {
 						const tagName = matchClose[1];
-						ctrl.go(matchClose[0].length).add("tag", {data: {tagName, close: true}});
+						ctrl
+							.go(matchClose[0].length)
+							.add("tag", { data: { tagName, close: true } });
 						return true;
 					}
 				}
@@ -40,7 +42,7 @@ export default function parse (text) {
 		},
 		endTag () {
 			if (ctrl.match("/>")) {
-				ctrl.go(2).end({data: {selfClosing: true}});
+				ctrl.go(2).end({ data: { selfClosing: true } });
 				return true;
 			}
 			else if (ctrl.match(">")) {
@@ -53,11 +55,13 @@ export default function parse (text) {
 			if (match && match[0]) {
 				const [full, prefix, attr, quote] = match;
 				if (quote) {
-					ctrl.start("attr", {data: {attr, prefix, quote}});
+					ctrl.start("attr", { data: { attr, prefix, quote } });
 					ctrl.go(full.length);
 				}
 				else {
-					ctrl.go(full.length).add("attr", {data: {attr, prefix}});
+					ctrl
+						.go(full.length)
+						.add("attr", { data: { attr, prefix } });
 				}
 				return true;
 			}
@@ -75,7 +79,7 @@ export default function parse (text) {
 				}
 				if (m) {
 					const expression = ctrl.endCopy();
-					ctrl.go(matcher.length).end({data: {expression}});
+					ctrl.go(matcher.length).end({ data: { expression } });
 				}
 			}
 			else {
@@ -95,21 +99,27 @@ export default function parse (text) {
 				lastNode.data.content += ctrl.get(1);
 			}
 			else {
-				ctrl.go(1).add("text", {data: {content: ctrl.get(1)}});
+				ctrl.go(1).add("text", { data: { content: ctrl.get(1) } });
 			}
 		},
 		expression () {
-			const match = ctrl.match(new RegExp(`^${startExp}(#|/)?(.*?)${endExp}`));
+			const match = ctrl.match(
+				new RegExp(`^${startExp}(#|/)?(.*?)${endExp}`)
+			);
 			if (match) {
-				const {"0": full, "1": control, "2": expression} = match;
+				const { "0": full, "1": control, "2": expression } = match;
 				let fn;
 				let args;
 				if (control === "#") {
-					const match = expression.match(/^([a-z]+(?:-[a-z]*)*)\s?(.*)/i);
+					const match = expression.match(
+						/^([a-z]+(?:-[a-z]*)*)\s?(.*)/i
+					);
 					fn = match[1];
 					args = match[2];
 				}
-				ctrl.go(full.length).add("expression", {data: {expression, control, fn, args}});
+				ctrl.go(full.length).add("expression", {
+					data: { expression, control, fn, args },
+				});
 			}
 		},
 	};
@@ -118,10 +128,7 @@ export default function parse (text) {
 		switch (ctrl.node.type) {
 			case "tag": {
 				if (ctrl.node.data.open) {
-					[
-						parse.endTag,
-						parse.startAttr,
-					].some(p => p());
+					[parse.endTag, parse.startAttr].some(p => p());
 				}
 				else {
 					parse.endTag();
@@ -152,14 +159,12 @@ export default function parse (text) {
 	return ctrl;
 }
 
-
 // разбить на выражения игнорируя строки
 // определить правую и левую сторону выражения (const, let, var)
 // const a = b = c + 2;
 // находим начало литерала [a-z]
 // идем игнорируя строки пока [a-z]
 // x.y = a.b[c["x"]].d(attrs)
-
 
 // create empty expression, clear $ concat "x"
 // >. push "x"
@@ -170,8 +175,6 @@ export default function parse (text) {
 // clear $ concat b
 // >[ push "b",
 // >"c" create new expression
-
-
 
 // (get, set, call) => set(["x", "y"], call(get(["a", "b", get(["c", "x"]), "d"])), get(["attrs"]))
 // parse expression

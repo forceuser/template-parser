@@ -99,24 +99,3 @@ export default class ParseCtrl {
 		return str.startsWith(val);
 	}
 }
-
-
-
-
-
-function compare (str1, str2, idx1 = 0, idx2 = 0) {
-	let i = 0;
-	const l1 = str1.length;
-	const l2 = str2.length;
-	if (l1 < l2 - idx2 + idx1) {
-		return false;
-	}
-
-	while (i < l2) {
-		if (str1[idx1 + i] !== str2[idx2 + i]) {
-			return false;
-		}
-		i++;
-	}
-	return true;
-}

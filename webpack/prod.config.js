@@ -3,7 +3,7 @@ const path = require("path");
 
 module.exports = {
 	entry: {
-		"parse": path.resolve(__dirname, "./cjs-entry.js"),
+		"parse": path.resolve(__dirname, "../src/cjs-entry.js"),
 	},
 	output: {
 		path: path.resolve(__dirname, "./dist"),
@@ -19,8 +19,9 @@ module.exports = {
 			use: [{
 				loader: "babel-loader",
 				options: {
-					presets: ["env"],
-					plugins: [],
+					presets: ["@babel/preset-env"],
+					plugins: [
+					],
 				},
 			}],
 		}],
