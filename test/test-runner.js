@@ -13,10 +13,11 @@ async function run () {
 	let success = true;
 	const $faucet = faucet();
 	for (const fileName of files) {
-		await new Promise(async (resolve) => {
+		await new Promise(async resolve => {
 			runTest({
 				fileName,
-				testFunction: (await import(`./unit-tests/${fileName}`)).default,
+				testFunction: (await import(`./unit-tests/${fileName}`))
+					.default,
 				middleware: [$faucet],
 				ondata: data => {
 					process.stdout.write(data);

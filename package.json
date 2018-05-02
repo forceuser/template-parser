@@ -7,7 +7,8 @@
     "serve": "http-server -a localhost -p 8061",
     "build": "NODE_ENV=production webpack --config ./webpack/production.config.js",
     "fix": "eslint --fix .",
-    "test": "eslint ./src/**/*.js && NODE_ENV=test webpack --hide-modules --config ./webpack/test.config.js && node ./test/build/test-runner-node.js && istanbul report --dir ./coverage/  --include ./coverage/coverage.json text html"
+    "test": "eslint ./src/**/*.js && NODE_ENV=test webpack --hide-modules --config ./webpack/test.config.js && node ./test/build/test-runner-node.js && istanbul report --dir ./coverage/  --include ./coverage/coverage.json text html",
+    "test-debug": "eslint ./src/**/*.js && NODE_ENV=test webpack --hide-modules --config ./webpack/test.config.js && node --inspect-brk ./test/build/test-runner-node.js && istanbul report --dir ./coverage/  --include ./coverage/coverage.json text html"
   },
   "author": "",
   "license": "ISC",

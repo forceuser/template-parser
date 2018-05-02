@@ -11084,10 +11084,7 @@ var apiMethods = {
     assert: __webpack_require__(/*! ./sinon/assert */ "./node_modules/sinon/lib/sinon/assert.js"),
     fake: __webpack_require__(/*! ./sinon/fake */ "./node_modules/sinon/lib/sinon/fake.js"),
     match: __webpack_require__(/*! ./sinon/match */ "./node_modules/sinon/lib/sinon/match.js"),
-    spy: __webpack_require__(/*! ./sinon/spy */ "./node_modules/sinon/lib/sinon/spy.js"),
     spyCall: __webpack_require__(/*! ./sinon/call */ "./node_modules/sinon/lib/sinon/call.js"),
-    stub: __webpack_require__(/*! ./sinon/stub */ "./node_modules/sinon/lib/sinon/stub.js"),
-    mock: __webpack_require__(/*! ./sinon/mock */ "./node_modules/sinon/lib/sinon/mock.js"),
 
     expectation: __webpack_require__(/*! ./sinon/mock-expectation */ "./node_modules/sinon/lib/sinon/mock-expectation.js"),
     createStubInstance: __webpack_require__(/*! ./sinon/stub */ "./node_modules/sinon/lib/sinon/stub.js").createStubInstance,
@@ -13275,6 +13272,7 @@ module.exports = mock;
 
 var collectOwnMethods = __webpack_require__(/*! ./collect-own-methods */ "./node_modules/sinon/lib/sinon/collect-own-methods.js");
 var getPropertyDescriptor = __webpack_require__(/*! ./util/core/get-property-descriptor */ "./node_modules/sinon/lib/sinon/util/core/get-property-descriptor.js");
+var isEsModule = __webpack_require__(/*! ./util/core/is-es-module */ "./node_modules/sinon/lib/sinon/util/core/is-es-module.js");
 var isPropertyConfigurable = __webpack_require__(/*! ./util/core/is-property-configurable */ "./node_modules/sinon/lib/sinon/util/core/is-property-configurable.js");
 var isNonExistentOwnProperty = __webpack_require__(/*! ./util/core/is-non-existent-own-property */ "./node_modules/sinon/lib/sinon/util/core/is-non-existent-own-property.js");
 var sinonMatch = __webpack_require__(/*! ./match */ "./node_modules/sinon/lib/sinon/match.js");
@@ -13531,6 +13529,10 @@ function Sandbox() {
     };
 
     sandbox.stub = function stub(object, property) {
+        if (isEsModule(object)) {
+            throw new TypeError("ES Modules cannot be stubbed");
+        }
+
         if (isNonExistentOwnProperty(object, property)) {
             throw new TypeError("Cannot stub non-existent own property " + valueToString(property));
         }

@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["parse"] = factory();
+		exports["template"] = factory();
 	else
-		root["parse"] = factory();
+		root["template"] = factory();
 })(global, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -15403,7 +15403,7 @@ module.exports = webpackAsyncContext;
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /mnt/data/ForceUser/Projects/template-parser/test/test-runner.js */"./test/test-runner.js");
+module.exports = __webpack_require__(/*! /home/forceuser/Projects/_VAPROJECTS/template-parser/test/test-runner.js */"./test/test-runner.js");
 
 
 /***/ }),

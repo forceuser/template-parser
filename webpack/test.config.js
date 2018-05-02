@@ -9,7 +9,8 @@ module.exports = merge(devConfig, {
 	],
 	output: {
 		path: path.resolve(__dirname, "../test/build"),
-		filename: "test-runner-node.js"
+		filename: "test-runner-node.js",
+		devtoolModuleFilenameTemplate: '[absolute-resource-path]',
 	},	
 	target: "node",
 	resolve: {
