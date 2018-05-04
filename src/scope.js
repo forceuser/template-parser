@@ -1,22 +1,42 @@
 const isInvalid = (value) => value == null || (typeof value !== "object" && typeof value !== "function");
 
-export default function (model) {
-	const scopeStack = [model];
-	const get = (chain, getter, callArgs) => {
+const spitPath = (path) => path.split(".");
+
+export default class Scope {
+	constructor (stack) {
+		this.stack = [...stack];
+		this.get = this.get.bind(this);
+		this.set = this.set.bind(this);
+		this.call = this.call.bind(this);
+		this.new = this.new.bind(this);
+	}
+	new (scope) {
+		return new Scope([...this.stack, scope || {}]);
+	}
+	call (chain, callArgs) {
+		return this.get(chain, null, callArgs);
+	}
+	get (chain, getter, callArgs) {
+		if (typeof chain === "string") {
+			chain = spitPath(chain);
+		}
+
 		let chainIdx = 0;
 		let value;
-		try {
-			value = getter();
-			chainIdx = 1;
+		if (typeof getter === "function") {
+			try {
+				value = getter();
+				chainIdx = 1;
+			}
+			catch (error) {/* read variable from local scope if it is declared */}
 		}
-		catch (error) {/* read variable from local scope if it is declared */}
 
 		if (chainIdx === 0) {
-			let i = scopeStack.length - 1;
+			let i = this.stack.length - 1;
 			const key = chain[0];
 			while (i >= 0) {
-				if (key in scopeStack[i]) {
-					value = scopeStack[i][key];
+				if (key in this.stack[i]) {
+					value = this.stack[i][key];
 					chainIdx = 1;
 					break;
 				}
@@ -38,32 +58,37 @@ export default function (model) {
 			return value.apply(context, callArgs);
 		}
 		return value;
-	};
-
-	const set = (chain, getter, setter, val) => {
+	}
+	set (chain, val, getter, setter) {
+		if (typeof chain === "string") {
+			chain = spitPath(chain);
+		}
 		let chainIdx = 0;
 		let value;
-		try {
-			value = getter();
-			if (chain.length > 1) {
-				if (isInvalid(value)) {
-					value = {};
-					setter(value);
+		if (typeof getter === "function" && typeof setter === "function") {
+			try {
+				value = getter();
+				if (chain.length > 1) {
+					if (isInvalid(value)) {
+						value = {};
+						setter(value);
+					}
 				}
+				else {
+					return setter(val);
+				}
+				chainIdx = 1;
 			}
-			else {
-				return setter(val);
-			}
-			chainIdx = 1;
+			catch (error) {/* read variable from local scope if it is declared */}
 		}
-		catch (error) {/* read variable from local scope if it is declared */}
+
 		let context = value;
 		if (chainIdx === 0) {
-			let i = scopeStack.length - 1;
+			let i = this.stack.length - 1;
 			const key = chain[0];
 			while (i >= 0) {
-				if (key in scopeStack[i] || i === 0) {
-					context = scopeStack[i];
+				if (key in this.stack[i] || i === 0) {
+					context = this.stack[i];
 					break;
 				}
 				i--;
@@ -83,8 +108,5 @@ export default function (model) {
 			context = value;
 			chainIdx++;
 		}
-		return "AHHAHHAHHA";
-	};
-
-	return {scopeStack, get, set};
+	}
 }
