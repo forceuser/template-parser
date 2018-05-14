@@ -3,12 +3,12 @@ const path = require("path");
 
 module.exports = ({
 	entry: {
-		"template": path.resolve(__dirname, "../src/cjs-entry.js"),
+		"parse": path.resolve(__dirname, "../src/cjs-entry.js"),
 	},
 	output: {
 		path: path.resolve(__dirname, "../dist"),
 		filename: "[name].js",
-		library: "template",
+		library: "parse",
 		libraryTarget: "umd",
 	},
 	devtool: "source-map",	

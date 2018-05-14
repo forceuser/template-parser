@@ -98,4 +98,14 @@ export default class ParseCtrl {
 		}
 		return str.startsWith(val);
 	}
+	get before () {
+		return this.text.substr(0, this.idx);
+	}
+	precedes (val) {
+		const str = this.before;
+		if (val instanceof RegExp) {
+			return str.match(val);
+		}
+		return str.endsWith(val);
+	}
 }

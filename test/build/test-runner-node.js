@@ -657,6 +657,162 @@ function objectToString(o) {
 
 /***/ }),
 
+/***/ "./node_modules/deep-equal/index.js":
+/*!******************************************!*\
+  !*** ./node_modules/deep-equal/index.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var pSlice = Array.prototype.slice;
+var objectKeys = __webpack_require__(/*! ./lib/keys.js */ "./node_modules/deep-equal/lib/keys.js");
+var isArguments = __webpack_require__(/*! ./lib/is_arguments.js */ "./node_modules/deep-equal/lib/is_arguments.js");
+
+var deepEqual = module.exports = function (actual, expected, opts) {
+  if (!opts) opts = {};
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (actual === expected) {
+    return true;
+
+  } else if (actual instanceof Date && expected instanceof Date) {
+    return actual.getTime() === expected.getTime();
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object',
+  // equivalence is determined by ==.
+  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
+    return opts.strict ? actual === expected : actual == expected;
+
+  // 7.4. For all other Object pairs, including Array objects, equivalence is
+  // determined by having the same number of owned properties (as verified
+  // with Object.prototype.hasOwnProperty.call), the same set of keys
+  // (although not necessarily the same order), equivalent values for every
+  // corresponding key, and an identical 'prototype' property. Note: this
+  // accounts for both named and indexed properties on Arrays.
+  } else {
+    return objEquiv(actual, expected, opts);
+  }
+}
+
+function isUndefinedOrNull(value) {
+  return value === null || value === undefined;
+}
+
+function isBuffer (x) {
+  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
+  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
+    return false;
+  }
+  if (x.length > 0 && typeof x[0] !== 'number') return false;
+  return true;
+}
+
+function objEquiv(a, b, opts) {
+  var i, key;
+  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+    return false;
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) return false;
+  //~~~I've managed to break Object.keys through screwy arguments passing.
+  //   Converting to array solves the problem.
+  if (isArguments(a)) {
+    if (!isArguments(b)) {
+      return false;
+    }
+    a = pSlice.call(a);
+    b = pSlice.call(b);
+    return deepEqual(a, b, opts);
+  }
+  if (isBuffer(a)) {
+    if (!isBuffer(b)) {
+      return false;
+    }
+    if (a.length !== b.length) return false;
+    for (i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+  try {
+    var ka = objectKeys(a),
+        kb = objectKeys(b);
+  } catch (e) {//happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates
+  // hasOwnProperty)
+  if (ka.length != kb.length)
+    return false;
+  //the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  //~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i])
+      return false;
+  }
+  //equivalent values for every corresponding key, and
+  //~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!deepEqual(a[key], b[key], opts)) return false;
+  }
+  return typeof a === typeof b;
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/deep-equal/lib/is_arguments.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/deep-equal/lib/is_arguments.js ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var supportsArgumentsClass = (function(){
+  return Object.prototype.toString.call(arguments)
+})() == '[object Arguments]';
+
+exports = module.exports = supportsArgumentsClass ? supported : unsupported;
+
+exports.supported = supported;
+function supported(object) {
+  return Object.prototype.toString.call(object) == '[object Arguments]';
+};
+
+exports.unsupported = unsupported;
+function unsupported(object){
+  return object &&
+    typeof object == 'object' &&
+    typeof object.length == 'number' &&
+    Object.prototype.hasOwnProperty.call(object, 'callee') &&
+    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
+    false;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/deep-equal/lib/keys.js":
+/*!*********************************************!*\
+  !*** ./node_modules/deep-equal/lib/keys.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+exports = module.exports = typeof Object.keys === 'function'
+  ? Object.keys : shim;
+
+exports.shim = shim;
+function shim (obj) {
+  var keys = [];
+  for (var key in obj) keys.push(key);
+  return keys;
+}
+
+
+/***/ }),
+
 /***/ "./node_modules/define-properties/index.js":
 /*!*************************************************!*\
   !*** ./node_modules/define-properties/index.js ***!
@@ -667,7 +823,7 @@ function objectToString(o) {
 "use strict";
 
 
-var keys = __webpack_require__(/*! object-keys */ "./node_modules/define-properties/node_modules/object-keys/index.js");
+var keys = __webpack_require__(/*! object-keys */ "./node_modules/object-keys/index.js");
 var foreach = __webpack_require__(/*! foreach */ "./node_modules/foreach/index.js");
 var hasSymbols = typeof Symbol === 'function' && typeof Symbol() === 'symbol';
 
@@ -725,182 +881,17 @@ module.exports = defineProperties;
 
 /***/ }),
 
-/***/ "./node_modules/define-properties/node_modules/object-keys/index.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/define-properties/node_modules/object-keys/index.js ***!
-  \**************************************************************************/
+/***/ "./node_modules/defined/index.js":
+/*!***************************************!*\
+  !*** ./node_modules/defined/index.js ***!
+  \***************************************/
 /*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-
-
-// modified from https://github.com/es-shims/es5-shim
-var has = Object.prototype.hasOwnProperty;
-var toStr = Object.prototype.toString;
-var slice = Array.prototype.slice;
-var isArgs = __webpack_require__(/*! ./isArguments */ "./node_modules/define-properties/node_modules/object-keys/isArguments.js");
-var isEnumerable = Object.prototype.propertyIsEnumerable;
-var hasDontEnumBug = !isEnumerable.call({ toString: null }, 'toString');
-var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
-var dontEnums = [
-	'toString',
-	'toLocaleString',
-	'valueOf',
-	'hasOwnProperty',
-	'isPrototypeOf',
-	'propertyIsEnumerable',
-	'constructor'
-];
-var equalsConstructorPrototype = function (o) {
-	var ctor = o.constructor;
-	return ctor && ctor.prototype === o;
-};
-var excludedKeys = {
-	$console: true,
-	$external: true,
-	$frame: true,
-	$frameElement: true,
-	$frames: true,
-	$innerHeight: true,
-	$innerWidth: true,
-	$outerHeight: true,
-	$outerWidth: true,
-	$pageXOffset: true,
-	$pageYOffset: true,
-	$parent: true,
-	$scrollLeft: true,
-	$scrollTop: true,
-	$scrollX: true,
-	$scrollY: true,
-	$self: true,
-	$webkitIndexedDB: true,
-	$webkitStorageInfo: true,
-	$window: true
-};
-var hasAutomationEqualityBug = (function () {
-	/* global window */
-	if (typeof window === 'undefined') { return false; }
-	for (var k in window) {
-		try {
-			if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-				try {
-					equalsConstructorPrototype(window[k]);
-				} catch (e) {
-					return true;
-				}
-			}
-		} catch (e) {
-			return true;
-		}
-	}
-	return false;
-}());
-var equalsConstructorPrototypeIfNotBuggy = function (o) {
-	/* global window */
-	if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
-		return equalsConstructorPrototype(o);
-	}
-	try {
-		return equalsConstructorPrototype(o);
-	} catch (e) {
-		return false;
-	}
-};
-
-var keysShim = function keys(object) {
-	var isObject = object !== null && typeof object === 'object';
-	var isFunction = toStr.call(object) === '[object Function]';
-	var isArguments = isArgs(object);
-	var isString = isObject && toStr.call(object) === '[object String]';
-	var theKeys = [];
-
-	if (!isObject && !isFunction && !isArguments) {
-		throw new TypeError('Object.keys called on a non-object');
-	}
-
-	var skipProto = hasProtoEnumBug && isFunction;
-	if (isString && object.length > 0 && !has.call(object, 0)) {
-		for (var i = 0; i < object.length; ++i) {
-			theKeys.push(String(i));
-		}
-	}
-
-	if (isArguments && object.length > 0) {
-		for (var j = 0; j < object.length; ++j) {
-			theKeys.push(String(j));
-		}
-	} else {
-		for (var name in object) {
-			if (!(skipProto && name === 'prototype') && has.call(object, name)) {
-				theKeys.push(String(name));
-			}
-		}
-	}
-
-	if (hasDontEnumBug) {
-		var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
-
-		for (var k = 0; k < dontEnums.length; ++k) {
-			if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
-				theKeys.push(dontEnums[k]);
-			}
-		}
-	}
-	return theKeys;
-};
-
-keysShim.shim = function shimObjectKeys() {
-	if (Object.keys) {
-		var keysWorksWithArguments = (function () {
-			// Safari 5.0 bug
-			return (Object.keys(arguments) || '').length === 2;
-		}(1, 2));
-		if (!keysWorksWithArguments) {
-			var originalKeys = Object.keys;
-			Object.keys = function keys(object) {
-				if (isArgs(object)) {
-					return originalKeys(slice.call(object));
-				} else {
-					return originalKeys(object);
-				}
-			};
-		}
-	} else {
-		Object.keys = keysShim;
-	}
-	return Object.keys || keysShim;
-};
-
-module.exports = keysShim;
-
-
-/***/ }),
-
-/***/ "./node_modules/define-properties/node_modules/object-keys/isArguments.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/define-properties/node_modules/object-keys/isArguments.js ***!
-  \********************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var toStr = Object.prototype.toString;
-
-module.exports = function isArguments(value) {
-	var str = toStr.call(value);
-	var isArgs = str === '[object Arguments]';
-	if (!isArgs) {
-		isArgs = str !== '[object Array]' &&
-			value !== null &&
-			typeof value === 'object' &&
-			typeof value.length === 'number' &&
-			value.length >= 0 &&
-			toStr.call(value.callee) === '[object Function]';
-	}
-	return isArgs;
+module.exports = function () {
+    for (var i = 0; i < arguments.length; i++) {
+        if (arguments[i] !== undefined) return arguments[i];
+    }
 };
 
 
@@ -2664,6 +2655,11 @@ const api = [
 
 // Export all keys:
 Object.keys(fs).forEach(key => {
+  if (key === 'promises') {
+    // fs.promises is a getter property that triggers ExperimentalWarning
+    // Don't re-export it here, the getter is defined in "lib/index.js"
+    return
+  }
   exports[key] = fs[key]
 })
 
@@ -2745,6 +2741,15 @@ module.exports = Object.assign(
   __webpack_require__(/*! ./path-exists */ "./node_modules/fs-extra/lib/path-exists/index.js"),
   __webpack_require__(/*! ./remove */ "./node_modules/fs-extra/lib/remove/index.js")
 )
+
+// Export fs.promises as a getter property so that we don't trigger
+// ExperimentalWarning before fs.promises is actually accessed.
+const fs = __webpack_require__(/*! fs */ "fs")
+if (Object.getOwnPropertyDescriptor(fs, 'promises')) {
+  Object.defineProperty(module.exports, 'promises', {
+    get () { return fs.promises }
+  })
+}
 
 
 /***/ }),
@@ -8450,57 +8455,6 @@ module.exports = __webpack_require__(/*! util */ "util").inspect;
 
 /***/ }),
 
-/***/ "./node_modules/object-keys/foreach.js":
-/*!*********************************************!*\
-  !*** ./node_modules/object-keys/foreach.js ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-var hasOwn = Object.prototype.hasOwnProperty;
-var toString = Object.prototype.toString;
-
-var isFunction = function (fn) {
-	var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
-	if (!isFunc && typeof window !== 'undefined') {
-		isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
-	}
-	return isFunc;
-};
-
-module.exports = function forEach(obj, fn) {
-	if (!isFunction(fn)) {
-		throw new TypeError('iterator must be a function');
-	}
-	var i, k,
-		isString = typeof obj === 'string',
-		l = obj.length,
-		context = arguments.length > 2 ? arguments[2] : null;
-	if (l === +l) {
-		for (i = 0; i < l; i++) {
-			if (context === null) {
-				fn(isString ? obj.charAt(i) : obj[i], i, obj);
-			} else {
-				fn.call(context, isString ? obj.charAt(i) : obj[i], i, obj);
-			}
-		}
-	} else {
-		for (k in obj) {
-			if (hasOwn.call(obj, k)) {
-				if (context === null) {
-					fn(obj[k], k, obj);
-				} else {
-					fn.call(context, obj[k], k, obj);
-				}
-			}
-		}
-	}
-};
-
-
-
-/***/ }),
-
 /***/ "./node_modules/object-keys/index.js":
 /*!*******************************************!*\
   !*** ./node_modules/object-keys/index.js ***!
@@ -8508,8 +8462,147 @@ module.exports = function forEach(obj, fn) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = Object.keys || __webpack_require__(/*! ./shim */ "./node_modules/object-keys/shim.js");
+"use strict";
 
+
+// modified from https://github.com/es-shims/es5-shim
+var has = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+var slice = Array.prototype.slice;
+var isArgs = __webpack_require__(/*! ./isArguments */ "./node_modules/object-keys/isArguments.js");
+var isEnumerable = Object.prototype.propertyIsEnumerable;
+var hasDontEnumBug = !isEnumerable.call({ toString: null }, 'toString');
+var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
+var dontEnums = [
+	'toString',
+	'toLocaleString',
+	'valueOf',
+	'hasOwnProperty',
+	'isPrototypeOf',
+	'propertyIsEnumerable',
+	'constructor'
+];
+var equalsConstructorPrototype = function (o) {
+	var ctor = o.constructor;
+	return ctor && ctor.prototype === o;
+};
+var excludedKeys = {
+	$console: true,
+	$external: true,
+	$frame: true,
+	$frameElement: true,
+	$frames: true,
+	$innerHeight: true,
+	$innerWidth: true,
+	$outerHeight: true,
+	$outerWidth: true,
+	$pageXOffset: true,
+	$pageYOffset: true,
+	$parent: true,
+	$scrollLeft: true,
+	$scrollTop: true,
+	$scrollX: true,
+	$scrollY: true,
+	$self: true,
+	$webkitIndexedDB: true,
+	$webkitStorageInfo: true,
+	$window: true
+};
+var hasAutomationEqualityBug = (function () {
+	/* global window */
+	if (typeof window === 'undefined') { return false; }
+	for (var k in window) {
+		try {
+			if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+				try {
+					equalsConstructorPrototype(window[k]);
+				} catch (e) {
+					return true;
+				}
+			}
+		} catch (e) {
+			return true;
+		}
+	}
+	return false;
+}());
+var equalsConstructorPrototypeIfNotBuggy = function (o) {
+	/* global window */
+	if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
+		return equalsConstructorPrototype(o);
+	}
+	try {
+		return equalsConstructorPrototype(o);
+	} catch (e) {
+		return false;
+	}
+};
+
+var keysShim = function keys(object) {
+	var isObject = object !== null && typeof object === 'object';
+	var isFunction = toStr.call(object) === '[object Function]';
+	var isArguments = isArgs(object);
+	var isString = isObject && toStr.call(object) === '[object String]';
+	var theKeys = [];
+
+	if (!isObject && !isFunction && !isArguments) {
+		throw new TypeError('Object.keys called on a non-object');
+	}
+
+	var skipProto = hasProtoEnumBug && isFunction;
+	if (isString && object.length > 0 && !has.call(object, 0)) {
+		for (var i = 0; i < object.length; ++i) {
+			theKeys.push(String(i));
+		}
+	}
+
+	if (isArguments && object.length > 0) {
+		for (var j = 0; j < object.length; ++j) {
+			theKeys.push(String(j));
+		}
+	} else {
+		for (var name in object) {
+			if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+				theKeys.push(String(name));
+			}
+		}
+	}
+
+	if (hasDontEnumBug) {
+		var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
+
+		for (var k = 0; k < dontEnums.length; ++k) {
+			if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
+				theKeys.push(dontEnums[k]);
+			}
+		}
+	}
+	return theKeys;
+};
+
+keysShim.shim = function shimObjectKeys() {
+	if (Object.keys) {
+		var keysWorksWithArguments = (function () {
+			// Safari 5.0 bug
+			return (Object.keys(arguments) || '').length === 2;
+		}(1, 2));
+		if (!keysWorksWithArguments) {
+			var originalKeys = Object.keys;
+			Object.keys = function keys(object) {
+				if (isArgs(object)) {
+					return originalKeys(slice.call(object));
+				} else {
+					return originalKeys(object);
+				}
+			};
+		}
+	} else {
+		Object.keys = keysShim;
+	}
+	return Object.keys || keysShim;
+};
+
+module.exports = keysShim;
 
 
 /***/ }),
@@ -8519,97 +8612,26 @@ module.exports = Object.keys || __webpack_require__(/*! ./shim */ "./node_module
   !*** ./node_modules/object-keys/isArguments.js ***!
   \*************************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
-
-var toString = Object.prototype.toString;
-
-module.exports = function isArguments(value) {
-	var str = toString.call(value);
-	var isArguments = str === '[object Arguments]';
-	if (!isArguments) {
-		isArguments = str !== '[object Array]'
-			&& value !== null
-			&& typeof value === 'object'
-			&& typeof value.length === 'number'
-			&& value.length >= 0
-			&& toString.call(value.callee) === '[object Function]';
-	}
-	return isArguments;
-};
-
-
-
-/***/ }),
-
-/***/ "./node_modules/object-keys/shim.js":
-/*!******************************************!*\
-  !*** ./node_modules/object-keys/shim.js ***!
-  \******************************************/
-/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-(function () {
-	"use strict";
+"use strict";
 
-	// modified from https://github.com/kriskowal/es5-shim
-	var has = Object.prototype.hasOwnProperty,
-		toString = Object.prototype.toString,
-		forEach = __webpack_require__(/*! ./foreach */ "./node_modules/object-keys/foreach.js"),
-		isArgs = __webpack_require__(/*! ./isArguments */ "./node_modules/object-keys/isArguments.js"),
-		hasDontEnumBug = !({'toString': null}).propertyIsEnumerable('toString'),
-		hasProtoEnumBug = (function () {}).propertyIsEnumerable('prototype'),
-		dontEnums = [
-			"toString",
-			"toLocaleString",
-			"valueOf",
-			"hasOwnProperty",
-			"isPrototypeOf",
-			"propertyIsEnumerable",
-			"constructor"
-		],
-		keysShim;
 
-	keysShim = function keys(object) {
-		var isObject = object !== null && typeof object === 'object',
-			isFunction = toString.call(object) === '[object Function]',
-			isArguments = isArgs(object),
-			theKeys = [];
+var toStr = Object.prototype.toString;
 
-		if (!isObject && !isFunction && !isArguments) {
-			throw new TypeError("Object.keys called on a non-object");
-		}
-
-		if (isArguments) {
-			forEach(object, function (value) {
-				theKeys.push(value);
-			});
-		} else {
-			var name,
-				skipProto = hasProtoEnumBug && isFunction;
-
-			for (name in object) {
-				if (!(skipProto && name === 'prototype') && has.call(object, name)) {
-					theKeys.push(name);
-				}
-			}
-		}
-
-		if (hasDontEnumBug) {
-			var ctor = object.constructor,
-				skipConstructor = ctor && ctor.prototype === object;
-
-			forEach(dontEnums, function (dontEnum) {
-				if (!(skipConstructor && dontEnum === 'constructor') && has.call(object, dontEnum)) {
-					theKeys.push(dontEnum);
-				}
-			});
-		}
-		return theKeys;
-	};
-
-	module.exports = keysShim;
-}());
-
+module.exports = function isArguments(value) {
+	var str = toStr.call(value);
+	var isArgs = str === '[object Arguments]';
+	if (!isArgs) {
+		isArgs = str !== '[object Array]' &&
+			value !== null &&
+			typeof value === 'object' &&
+			typeof value.length === 'number' &&
+			value.length >= 0 &&
+			toStr.call(value.callee) === '[object Function]';
+	}
+	return isArgs;
+};
 
 
 /***/ }),
@@ -11721,7 +11743,7 @@ function base64DetectIncompleteChar(buffer) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var defined = __webpack_require__(/*! defined */ "./node_modules/tape/node_modules/defined/index.js");
+var defined = __webpack_require__(/*! defined */ "./node_modules/defined/index.js");
 var createDefaultStream = __webpack_require__(/*! ./lib/default_stream */ "./node_modules/tape/lib/default_stream.js");
 var Test = __webpack_require__(/*! ./lib/test */ "./node_modules/tape/lib/test.js");
 var createResult = __webpack_require__(/*! ./lib/results */ "./node_modules/tape/lib/results.js");
@@ -11932,7 +11954,7 @@ module.exports = function () {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var defined = __webpack_require__(/*! defined */ "./node_modules/tape/node_modules/defined/index.js");
+var defined = __webpack_require__(/*! defined */ "./node_modules/defined/index.js");
 var EventEmitter = __webpack_require__(/*! events */ "events").EventEmitter;
 var inherits = __webpack_require__(/*! inherits */ "./node_modules/inherits/inherits.js");
 var through = __webpack_require__(/*! through */ "./node_modules/through/index.js");
@@ -12137,8 +12159,8 @@ function invalidYaml (str) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(__dirname) {var deepEqual = __webpack_require__(/*! deep-equal */ "./node_modules/tape/node_modules/deep-equal/index.js");
-var defined = __webpack_require__(/*! defined */ "./node_modules/tape/node_modules/defined/index.js");
+/* WEBPACK VAR INJECTION */(function(__dirname) {var deepEqual = __webpack_require__(/*! deep-equal */ "./node_modules/deep-equal/index.js");
+var defined = __webpack_require__(/*! defined */ "./node_modules/defined/index.js");
 var path = __webpack_require__(/*! path */ "path");
 var inherits = __webpack_require__(/*! inherits */ "./node_modules/inherits/inherits.js");
 var EventEmitter = __webpack_require__(/*! events */ "events").EventEmitter;
@@ -12686,178 +12708,6 @@ Test.skip = function (name_, _opts, _cb) {
 
 /***/ }),
 
-/***/ "./node_modules/tape/node_modules/deep-equal/index.js":
-/*!************************************************************!*\
-  !*** ./node_modules/tape/node_modules/deep-equal/index.js ***!
-  \************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(/*! ./lib/keys.js */ "./node_modules/tape/node_modules/deep-equal/lib/keys.js");
-var isArguments = __webpack_require__(/*! ./lib/is_arguments.js */ "./node_modules/tape/node_modules/deep-equal/lib/is_arguments.js");
-
-var deepEqual = module.exports = function (actual, expected, opts) {
-  if (!opts) opts = {};
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (actual === expected) {
-    return true;
-
-  } else if (actual instanceof Date && expected instanceof Date) {
-    return actual.getTime() === expected.getTime();
-
-  // 7.3. Other pairs that do not both pass typeof value == 'object',
-  // equivalence is determined by ==.
-  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
-    return opts.strict ? actual === expected : actual == expected;
-
-  // 7.4. For all other Object pairs, including Array objects, equivalence is
-  // determined by having the same number of owned properties (as verified
-  // with Object.prototype.hasOwnProperty.call), the same set of keys
-  // (although not necessarily the same order), equivalent values for every
-  // corresponding key, and an identical 'prototype' property. Note: this
-  // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(actual, expected, opts);
-  }
-}
-
-function isUndefinedOrNull(value) {
-  return value === null || value === undefined;
-}
-
-function isBuffer (x) {
-  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
-  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-    return false;
-  }
-  if (x.length > 0 && typeof x[0] !== 'number') return false;
-  return true;
-}
-
-function objEquiv(a, b, opts) {
-  var i, key;
-  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-    return false;
-  // an identical 'prototype' property.
-  if (a.prototype !== b.prototype) return false;
-  //~~~I've managed to break Object.keys through screwy arguments passing.
-  //   Converting to array solves the problem.
-  if (isArguments(a)) {
-    if (!isArguments(b)) {
-      return false;
-    }
-    a = pSlice.call(a);
-    b = pSlice.call(b);
-    return deepEqual(a, b, opts);
-  }
-  if (isBuffer(a)) {
-    if (!isBuffer(b)) {
-      return false;
-    }
-    if (a.length !== b.length) return false;
-    for (i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  try {
-    var ka = objectKeys(a),
-        kb = objectKeys(b);
-  } catch (e) {//happens when one is a string literal and the other isn't
-    return false;
-  }
-  // having the same number of owned properties (keys incorporates
-  // hasOwnProperty)
-  if (ka.length != kb.length)
-    return false;
-  //the same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  //~~~cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
-    if (ka[i] != kb[i])
-      return false;
-  }
-  //equivalent values for every corresponding key, and
-  //~~~possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!deepEqual(a[key], b[key], opts)) return false;
-  }
-  return typeof a === typeof b;
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/tape/node_modules/deep-equal/lib/is_arguments.js":
-/*!***********************************************************************!*\
-  !*** ./node_modules/tape/node_modules/deep-equal/lib/is_arguments.js ***!
-  \***********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-var supportsArgumentsClass = (function(){
-  return Object.prototype.toString.call(arguments)
-})() == '[object Arguments]';
-
-exports = module.exports = supportsArgumentsClass ? supported : unsupported;
-
-exports.supported = supported;
-function supported(object) {
-  return Object.prototype.toString.call(object) == '[object Arguments]';
-};
-
-exports.unsupported = unsupported;
-function unsupported(object){
-  return object &&
-    typeof object == 'object' &&
-    typeof object.length == 'number' &&
-    Object.prototype.hasOwnProperty.call(object, 'callee') &&
-    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
-    false;
-};
-
-
-/***/ }),
-
-/***/ "./node_modules/tape/node_modules/deep-equal/lib/keys.js":
-/*!***************************************************************!*\
-  !*** ./node_modules/tape/node_modules/deep-equal/lib/keys.js ***!
-  \***************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-exports = module.exports = typeof Object.keys === 'function'
-  ? Object.keys : shim;
-
-exports.shim = shim;
-function shim (obj) {
-  var keys = [];
-  for (var key in obj) keys.push(key);
-  return keys;
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/tape/node_modules/defined/index.js":
-/*!*********************************************************!*\
-  !*** ./node_modules/tape/node_modules/defined/index.js ***!
-  \*********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = function () {
-    for (var i = 0; i < arguments.length; i++) {
-        if (arguments[i] !== undefined) return arguments[i];
-    }
-};
-
-
-/***/ }),
-
 /***/ "./node_modules/through/index.js":
 /*!***************************************!*\
   !*** ./node_modules/through/index.js ***!
@@ -12987,6 +12837,170 @@ function through (write, end, opts) {
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/through2/node_modules/object-keys/foreach.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/through2/node_modules/object-keys/foreach.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var hasOwn = Object.prototype.hasOwnProperty;
+var toString = Object.prototype.toString;
+
+var isFunction = function (fn) {
+	var isFunc = (typeof fn === 'function' && !(fn instanceof RegExp)) || toString.call(fn) === '[object Function]';
+	if (!isFunc && typeof window !== 'undefined') {
+		isFunc = fn === window.setTimeout || fn === window.alert || fn === window.confirm || fn === window.prompt;
+	}
+	return isFunc;
+};
+
+module.exports = function forEach(obj, fn) {
+	if (!isFunction(fn)) {
+		throw new TypeError('iterator must be a function');
+	}
+	var i, k,
+		isString = typeof obj === 'string',
+		l = obj.length,
+		context = arguments.length > 2 ? arguments[2] : null;
+	if (l === +l) {
+		for (i = 0; i < l; i++) {
+			if (context === null) {
+				fn(isString ? obj.charAt(i) : obj[i], i, obj);
+			} else {
+				fn.call(context, isString ? obj.charAt(i) : obj[i], i, obj);
+			}
+		}
+	} else {
+		for (k in obj) {
+			if (hasOwn.call(obj, k)) {
+				if (context === null) {
+					fn(obj[k], k, obj);
+				} else {
+					fn.call(context, obj[k], k, obj);
+				}
+			}
+		}
+	}
+};
+
+
+
+/***/ }),
+
+/***/ "./node_modules/through2/node_modules/object-keys/index.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/through2/node_modules/object-keys/index.js ***!
+  \*****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = Object.keys || __webpack_require__(/*! ./shim */ "./node_modules/through2/node_modules/object-keys/shim.js");
+
+
+
+/***/ }),
+
+/***/ "./node_modules/through2/node_modules/object-keys/isArguments.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/through2/node_modules/object-keys/isArguments.js ***!
+  \***********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var toString = Object.prototype.toString;
+
+module.exports = function isArguments(value) {
+	var str = toString.call(value);
+	var isArguments = str === '[object Arguments]';
+	if (!isArguments) {
+		isArguments = str !== '[object Array]'
+			&& value !== null
+			&& typeof value === 'object'
+			&& typeof value.length === 'number'
+			&& value.length >= 0
+			&& toString.call(value.callee) === '[object Function]';
+	}
+	return isArguments;
+};
+
+
+
+/***/ }),
+
+/***/ "./node_modules/through2/node_modules/object-keys/shim.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/through2/node_modules/object-keys/shim.js ***!
+  \****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function () {
+	"use strict";
+
+	// modified from https://github.com/kriskowal/es5-shim
+	var has = Object.prototype.hasOwnProperty,
+		toString = Object.prototype.toString,
+		forEach = __webpack_require__(/*! ./foreach */ "./node_modules/through2/node_modules/object-keys/foreach.js"),
+		isArgs = __webpack_require__(/*! ./isArguments */ "./node_modules/through2/node_modules/object-keys/isArguments.js"),
+		hasDontEnumBug = !({'toString': null}).propertyIsEnumerable('toString'),
+		hasProtoEnumBug = (function () {}).propertyIsEnumerable('prototype'),
+		dontEnums = [
+			"toString",
+			"toLocaleString",
+			"valueOf",
+			"hasOwnProperty",
+			"isPrototypeOf",
+			"propertyIsEnumerable",
+			"constructor"
+		],
+		keysShim;
+
+	keysShim = function keys(object) {
+		var isObject = object !== null && typeof object === 'object',
+			isFunction = toString.call(object) === '[object Function]',
+			isArguments = isArgs(object),
+			theKeys = [];
+
+		if (!isObject && !isFunction && !isArguments) {
+			throw new TypeError("Object.keys called on a non-object");
+		}
+
+		if (isArguments) {
+			forEach(object, function (value) {
+				theKeys.push(value);
+			});
+		} else {
+			var name,
+				skipProto = hasProtoEnumBug && isFunction;
+
+			for (name in object) {
+				if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+					theKeys.push(name);
+				}
+			}
+		}
+
+		if (hasDontEnumBug) {
+			var ctor = object.constructor,
+				skipConstructor = ctor && ctor.prototype === object;
+
+			forEach(dontEnums, function (dontEnum) {
+				if (!(skipConstructor && dontEnum === 'constructor') && has.call(object, dontEnum)) {
+					theKeys.push(dontEnum);
+				}
+			});
+		}
+		return theKeys;
+	};
+
+	module.exports = keysShim;
+}());
+
 
 
 /***/ }),
@@ -15005,6 +15019,60 @@ function base64DetectIncompleteChar(buffer) {
 
 /***/ }),
 
+/***/ "./node_modules/through2/node_modules/xtend/has-keys.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/through2/node_modules/xtend/has-keys.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = hasKeys
+
+function hasKeys(source) {
+    return source !== null &&
+        (typeof source === "object" ||
+        typeof source === "function")
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/through2/node_modules/xtend/index.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/through2/node_modules/xtend/index.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Keys = __webpack_require__(/*! object-keys */ "./node_modules/through2/node_modules/object-keys/index.js")
+var hasKeys = __webpack_require__(/*! ./has-keys */ "./node_modules/through2/node_modules/xtend/has-keys.js")
+
+module.exports = extend
+
+function extend() {
+    var target = {}
+
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i]
+
+        if (!hasKeys(source)) {
+            continue
+        }
+
+        var keys = Keys(source)
+
+        for (var j = 0; j < keys.length; j++) {
+            var name = keys[j]
+            target[name] = source[name]
+        }
+    }
+
+    return target
+}
+
+
+/***/ }),
+
 /***/ "./node_modules/through2/through2.js":
 /*!*******************************************!*\
   !*** ./node_modules/through2/through2.js ***!
@@ -15014,7 +15082,7 @@ function base64DetectIncompleteChar(buffer) {
 
 const Transform = __webpack_require__(/*! stream */ "stream").Transform || __webpack_require__(/*! readable-stream/transform */ "./node_modules/through2/node_modules/readable-stream/transform.js")
     , inherits  = __webpack_require__(/*! util */ "util").inherits
-    , xtend     = __webpack_require__(/*! xtend */ "./node_modules/xtend/index.js")
+    , xtend     = __webpack_require__(/*! xtend */ "./node_modules/through2/node_modules/xtend/index.js")
 
 function noop (chunk, enc, callback) {
   callback(null, chunk)
@@ -15133,60 +15201,6 @@ function wrappy (fn, cb) {
     }
     return ret
   }
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/xtend/has-keys.js":
-/*!****************************************!*\
-  !*** ./node_modules/xtend/has-keys.js ***!
-  \****************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = hasKeys
-
-function hasKeys(source) {
-    return source !== null &&
-        (typeof source === "object" ||
-        typeof source === "function")
-}
-
-
-/***/ }),
-
-/***/ "./node_modules/xtend/index.js":
-/*!*************************************!*\
-  !*** ./node_modules/xtend/index.js ***!
-  \*************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var Keys = __webpack_require__(/*! object-keys */ "./node_modules/object-keys/index.js")
-var hasKeys = __webpack_require__(/*! ./has-keys */ "./node_modules/xtend/has-keys.js")
-
-module.exports = extend
-
-function extend() {
-    var target = {}
-
-    for (var i = 0; i < arguments.length; i++) {
-        var source = arguments[i]
-
-        if (!hasKeys(source)) {
-            continue
-        }
-
-        var keys = Keys(source)
-
-        for (var j = 0; j < keys.length; j++) {
-            var name = keys[j]
-            target[name] = source[name]
-        }
-    }
-
-    return target
 }
 
 
@@ -15403,7 +15417,7 @@ module.exports = webpackAsyncContext;
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /mnt/data/ForceUser/Projects/template-parser/test/test-runner.js */"./test/test-runner.js");
+module.exports = __webpack_require__(/*! /home/forceuser/Projects/template-parser/test/test-runner.js */"./test/test-runner.js");
 
 
 /***/ }),

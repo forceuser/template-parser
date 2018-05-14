@@ -13365,7 +13365,6 @@ function Sandbox() {
 
     sandbox.reset = function reset() {
         applyOnEach(collection, "reset");
-        applyOnEach(collection, "resetHistory");
     };
 
     sandbox.resetBehavior = function resetBehavior() {

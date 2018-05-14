@@ -6,12 +6,72 @@
 	<body>
 		<script src="./dist/parse.js"></script>
 		<script>
-			console.log("parse", parse(
+			console.log("tpl", parse.parseTpl(
 				`<div @prfix:attr="val" attr-x="{{express}}">
 					{{#list items as item}}
 						innerText {{item.name}}
 					{{/list}}
 				</div>`
+			));
+
+				console.log("expression1", parse.parseExpression(`
+				
+					"aaaa\\" bbbb cccc" "dddd"
+					123
+					"eeee"				
+				`));
+
+			console.log("expression", parse.parseExpression(
+				`
+					const a = async (arg1 = 5, arg2, ...rest) => {
+						const [x, y, z = 3] = rest;
+						const {a, b, c: val = "def"} = arg2;
+						// this is one line comment
+						switch (a) {
+							case "aaa":
+								console.log("sdads");
+							break;
+							case "bbb":
+								console.log("sdads");
+							break;
+							default: console.log("sdads\\" sdasda asd");
+						}
+
+						
+
+						(1).toString();
+						"sdas".toString();
+						[].toString();
+						const x = {}.toString(a, b, c);
+
+						for (const i = 0; i < b; i++) {
+
+						}
+
+						/* this is
+						multiline
+						comment */
+
+						class XX extends Object {
+							constructor () {
+								const x = a ? b.d : c;
+							}
+							bb () {
+
+							}
+							static cc () {
+
+							}
+							get value () {
+
+							}
+							function abc () {
+
+							}
+						}
+					}
+				
+				`
 			));
 		</script>
 	</body>
