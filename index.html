@@ -20,8 +20,7 @@
 					123
 					"eeee"				
 				`));
-
-			console.log("expression", parse.parseExpression(
+			const parsedExpr = parse.parseExpression(
 				`
 					const a = async (arg1 = 5, arg2, ...rest) => {
 						const [x, y, z = 3] = rest;
@@ -72,7 +71,9 @@
 					}
 				
 				`
-			));
+			);
+			console.log("expression", parsedExpr);
+			console.log("format", parse.formatExpression(parsedExpr.root));
 		</script>
 	</body>
 </html>

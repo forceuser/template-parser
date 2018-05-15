@@ -59,6 +59,7 @@ export default function parse (text) {
 	const parse = {
 		string () {
 			if (ctrl.node.type === "string") {
+				const node = ctrl.node;
 				if (ctrl.match(ctrl.node.data.quote)) {
 					const matchEscapes = ctrl.precedes(/(\\+)$/);
 					if (
@@ -66,6 +67,7 @@ export default function parse (text) {
 						(matchEscapes && matchEscapes[1].length % 2 === 0)
 					) {
 						ctrl.go().end();
+						node.data.val = node.text;
 						return true;
 					}
 				}
@@ -94,58 +96,39 @@ export default function parse (text) {
 					.add("keyword", {data: {val: match[1]}});
 			}
 		},
-		bracketsRound () {
-			if (ctrl.node.type === "()" && ctrl.match(")")) {
+		brackets () {
+			if (ctrl.node.type === "brackets" && ctrl.match(ctrl.node.data.close)) {
 				ctrl.go().end();
 				return true;
 			}
-			if (ctrl.match("(")) {
-				ctrl.start("()");
-				return true;
-			}
-		},
-		bracketsSquare () {
-			if (ctrl.node.type === "[]" && ctrl.match("]")) {
-				ctrl.go().end();
-				return true;
-			}
-			if (ctrl.match("[")) {
-				ctrl.start("[]");
-				return true;
-			}
-		},
-		bracketsCurly () {
-			if (ctrl.node.type === "{}" && ctrl.match("}")) {
-				ctrl.go().end();
-				return true;
-			}
-			if (ctrl.match("{")) {
-				ctrl.start("{}");
+			const match = ctrl.match(/^([\(\[\{])/);
+			if (match) {
+				ctrl.start("brackets", {data: {open: match[1], close: {"{": "}", "(": ")", "[": "]"}[match[1]]}});
 				return true;
 			}
 		},
 		dot () {
 			const match = ctrl.match(/^(\.+)/);
 			if (match && match[1].length === 1) {
-				ctrl.go().add("dot");
+				ctrl.go().add("dot", {data: {val: "."}});
 				return true;
 			}
 		},
 		comma () {
 			if (ctrl.match(",")) {
-				ctrl.go().add(",");
+				ctrl.go().add(",", {data: {val: ","}});
 				return true;
 			}
 		},
 		colon () {
 			if (ctrl.match(":")) {
-				ctrl.go().add(":");
+				ctrl.go().add(":", {data: {val: ":"}});
 				return true;
 			}
 		},
 		semicolon () {
 			if (ctrl.match(";")) {
-				ctrl.go().add(";");
+				ctrl.go().add(";", {data: {val: ";"}});
 				return true;
 			}
 		},
@@ -175,9 +158,9 @@ export default function parse (text) {
 				return true;
 			}
 		},
-		lineEnd () {
+		linebreak () {
 			if (ctrl.match(/^\n/)) {
-				ctrl.go().add("lineEnd");
+				ctrl.go().add("linebreak");
 				return true;
 			}
 		},
@@ -196,12 +179,10 @@ export default function parse (text) {
 				[
 					parse.comment,
 					parse.string,
-					parse.lineEnd,
+					parse.linebreak,
 					parse.number,
 					parse.keyword,
-					parse.bracketsRound,
-					parse.bracketsSquare,
-					parse.bracketsCurly,
+					parse.brackets,
 					parse.colon,
 					parse.semicolon,
 					parse.comma,
