@@ -110,7 +110,7 @@ export default function parse (text) {
 		dot () {
 			const match = ctrl.match(/^(\.+)/);
 			if (match && match[1].length === 1) {
-				ctrl.go().add("dot", {data: {val: "."}});
+				ctrl.go().add(".", {data: {val: "."}});
 				return true;
 			}
 		},
@@ -128,7 +128,7 @@ export default function parse (text) {
 		},
 		semicolon () {
 			if (ctrl.match(";")) {
-				ctrl.go().add(";", {data: {val: ";"}});
+				ctrl.go().add(";");
 				return true;
 			}
 		},
@@ -180,11 +180,11 @@ export default function parse (text) {
 					parse.comment,
 					parse.string,
 					parse.linebreak,
+					parse.semicolon,
 					parse.number,
 					parse.keyword,
 					parse.brackets,
 					parse.colon,
-					parse.semicolon,
 					parse.comma,
 					parse.dot,
 					parse.literal,
