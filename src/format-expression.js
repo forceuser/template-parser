@@ -12,11 +12,85 @@ function isOP (node) {
 	return ["operation", ",", ".", ":"].includes(node.type);
 }
 
+function isSign (node) {
+	return ["comment", "linebreak", ";"].includes(node.type);
+}
+
 function getNextSignificant (i, list) {
 	while (i < list.length) {
 		if (list[i].type !== "linebreak") {
 			return list[i];
 		}
+	}
+}
+
+class Navigator {
+	constructor (root) {
+		this.stack = [root];
+		this.nodes = this.stack[0].children;
+		this.node = this.nodes[0];
+		this.history = [0];
+	}
+	down () {
+
+	}
+	get idx () {
+		return this.history[this.history.length - 1];
+	}
+	get length () {
+		return this.history.length;
+	}
+	go (idx) {
+		this.history.push(idx);
+		return this;
+	}
+	next () {
+		return this.go(this.idx + 1);
+	}
+	prev () {
+		return this.go(this.idx - 1);
+	}
+	nextVal () {
+		const idx = this.findNext(node => isVal(node));
+		if (idx != null) {
+			this.go(idx);
+			return this.nodeList[idx];
+		}
+	}
+	nextLit () {
+		const idx = this.findNext(node => isLit(node));
+		if (idx != null) {
+			this.go(idx);
+			return this.nodeList[idx];
+		}
+	}
+	nextSign () {
+		const idx = this.findNext(node => isSign(node));
+		if (idx != null) {
+			this.go(idx);
+			return this.nodeList[idx];
+		}
+	}
+	findNext (condition) {
+		const i = this.idx;
+		const length = this.length;
+		while (i < length) {
+			const item = this.nodeList[i];
+			if (condition(item, i)) {
+				return i;
+			}
+			i++;
+		}
+	}
+	nextOP () {
+		const idx = this.findNext(node => isOP(node));
+		if (idx != null) {
+			this.go(idx);
+			return this.nodeList[idx];
+		}
+	}
+	back () {
+		this.node = this.nodeList[this.history.pop()];
 	}
 }
 
@@ -44,10 +118,7 @@ function format (node, stack = []) {
 			brk = child.type;
 		}
 
-		if (
-			child.type === "literal" ||
-			(child.type === "operation" && child.data.val === ".")
-		) {
+		if (child.type === "literal" || child.type === ".") {
 			getset.push();
 		}
 
@@ -64,14 +135,15 @@ function format (node, stack = []) {
 
 		let brkn;
 		if (significant && lastSignificant) {
-			const noSemicolon = brk === "linebreak" && (isOP(lastSignificant) || isOP(significant));
+			const noSemicolon =
+				brk === "linebreak" &&
+				(isOP(lastSignificant) || isOP(significant));
 			if (brk && !noSemicolon) {
 				result += ";";
 				brkn = true;
 			}
 		}
 		const ignore = false;
-
 
 		const nx = getNextSignificant(i, children);
 
