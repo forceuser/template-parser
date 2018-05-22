@@ -132,6 +132,12 @@ export default function parse (text) {
 				return true;
 			}
 		},
+		arrow () {
+			if (ctrl.match("=>")) {
+				ctrl.go(2).add("=>", {data: {val: "=>"}});
+				return true;
+			}
+		},
 		number () {
 			const match = ctrl.match(/^(\d+?\.?\d*)/);
 			if (match) {
@@ -187,6 +193,7 @@ export default function parse (text) {
 					parse.colon,
 					parse.comma,
 					parse.dot,
+					parse.arrow,
 					parse.literal,
 					parse.operation,
 				].some(p => p());
