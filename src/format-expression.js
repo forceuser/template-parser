@@ -12,7 +12,7 @@ function isOP (node) {
 	return ["operation", ",", ".", ":", "=>"].includes(node.type);
 }
 
-function isOP2 (node) {
+function isOPNoAccessor (node) {
 	return ["operation", ",", ":"].includes(node.type);
 }
 
@@ -20,27 +20,20 @@ function isSign (node) {
 	return !["comment", "linebreak", ";"].includes(node.type);
 }
 
-function getNextSignificant (i, list) {
-	while (i < list.length) {
-		if (list[i].type !== "linebreak") {
-			return list[i];
-		}
-	}
-}
-
 function formatChain (chain, before, after) {
-	return `chain(${chain.map(i => i.data.val || "~").join(",")})`;
+	return `chain(${chain.map(i => i.data.val || format(i, "code", true)).join(",")})`;
 }
 
-function format (parent, forceDeclaration = false, root = true) {
+function format (parent, type = "root", skipBrackets = false) {
 	const nodes = parent.children || [];
 	const snodes = [];
 	let brk = false;
 	let prevNode;
-	nodes.forEach((node) => {
+	nodes.forEach((node, idx) => {
 		if (isSign(node)) {
 			snodes.push(node);
-			if (prevNode && (brk === ";" || (brk === "linebreak" && isOP(node) !== isOP(prevNode)))) {
+			const block = prevNode && prevNode.type !== "brackets" && prevNode.data.open === "{";
+			if (prevNode && (brk === ";" || (brk === "linebreak" && (!isOP(node) && !isOP(prevNode) && !block)))) {
 				prevNode.brk = true;
 			}
 			brk = false;
@@ -49,78 +42,121 @@ function format (parent, forceDeclaration = false, root = true) {
 		else if (node.type === ";" || (node.type === "linebreak" && !brk)) {
 			brk = node.type;
 		}
+		// if (idx >= node.length - 1) {
+		// 	node.brk = true;
+		// }
 	});
 	let result = "";
-	if (parent.type === "brackets") {
+	if (parent.type === "brackets" && !skipBrackets) {
 		result += parent.data.open;
 	}
 	prevNode = null;
 	let chain;
 	let beforeChain;
 	let declaration = false;
-	let functionDeclaration = false;
+	let leftSide = false;
 	let line;
+	let leftSideLit = false;
+
 	snodes.forEach((node, idx) => {
 		const nextNode = snodes[idx + 1];
-		const lit = node.type === "literal";
+		if (node.type === "keyword" && node.data.val === "function") {
+			node.fn = true;
+			node.fnKeyword = true;
+			let argsNode = snodes[idx + 1];
+			if (argsNode && argsNode.type === "literal") {
+				argsNode.fn = true;
+				argsNode.fnName = true;
+				argsNode = snodes[idx + 2];
+			}
+			if (argsNode && argsNode.type === "brackets") {
+				argsNode.fn = true;
+				argsNode.fnArgs = true;
+			}
+		}
+		else if (nextNode && nextNode.type === "=>") {
+			node.fn = true;
+			node.fnArgs = true;
+		}
+
+		const isLast = idx >= snodes.length - 1;
+		const literal = node.type === "literal";
 		const lineStart = !prevNode || prevNode.brk;
-		const opStart = prevNode && ["operation", ":"].includes(prevNode.type);
-		const blockStart = prevNode && prevNode.type === ",";
-
-
+		const codeNode = ["root", "code"].includes(type);
+		const blockStart = ((prevNode && prevNode.type === ",") || lineStart) && codeNode;
+		const argStart = ((prevNode && prevNode.type === ",") || lineStart) && type === "brackets";
+		const opStart = prevNode && ["operation", ":"].includes(prevNode.type) && !blockStart;
+		const chainable = ["literal", "number", "string"].includes(node.type) || (!declaration && leftSide);
 
 		// forceDeclaration ...rest exception
+		if (blockStart || argStart) {
+			leftSideLit = false;
+		}
 
 		if (lineStart) {
 			if (line) {
 				result += line;
 			}
 			line = "";
-			declaration = forceDeclaration || node.type === "keyword" && ["const", "let", "var"].includes(node.data.val);
-		}
-
-		if (lineStart || opStart || blockStart) {
-			functionDeclaration = (node.type === "keyword" && node.data.val === "function") || (nextNode && nextNode.type === "=>");
+			declaration = node.type === "keyword" && ["const", "let", "var"].includes(node.data.val);
+			leftSide = true;
 		}
 
 
-		if (!chain && ((lineStart && !forceDeclaration && !declaration) || opStart || (blockStart && !forceDeclaration))) {
-			if (lit || (nextNode && (nextNode.type === "." || (nextNode.type === "brackets" && nextNode.data.open === "[")))) {
-				beforeChain = prevNode;
-				chain = [];
-			}
+		if (opStart && leftSideLit) {
+			leftSide = false;
 		}
 
+		if ((declaration && blockStart) || argStart) {
+			leftSide = true;
+		}
+
+		if (leftSide && chainable) {
+			leftSideLit = true;
+		}
+
+
+		if (!chain && type !== "destructuring" && chainable && !leftSide && (opStart || blockStart)) {
+			beforeChain = prevNode;
+			chain = [];
+		}
+
+		let skipOutput = false;
 		if (chain) {
-			const op = isOP2(node);
+			const op = isOPNoAccessor(node);
+			skipOutput = true;
 			if (!isOP(node)) {
 				chain.push(node);
 			}
-			if (node.brk || isOP2(node)) {
+
+
+			if (node.brk || op || isLast) {
+				skipOutput = node.brk || isLast;
 				const space = beforeChain && isLit(beforeChain) ? " " : "";
 				line += space + formatChain(chain, beforeChain, node);
-				// if (op) {
-				// 	line += node.data.val;
-				// }
 				chain = null;
 			}
 		}
 		else if (node.type === "brackets") {
-			line += format(node, (node.data.open === "(" && functionDeclaration) || (declaration && !opStart), false);
+			const destructuring = leftSide && (declaration || (lineStart && parent.type === "brackets" && parent.data.open === "(")) && ["{", "["].includes(node.data.open);
+			const t = destructuring ? "destructuring" : (!node.fnArgs ? "code" : "brackets");
+			line += format(node, t);
 		}
-		else if (node.data.val) {
-			const space = prevNode && isLit(prevNode) && isLit(node) ? " " : "";
-			line += space + node.data.val;
+
+		if (node.data.val && !skipOutput) {
+			const needSpace = prevNode && isLit(prevNode) && isLit(node);
+			line += (needSpace ? " " : "") + node.data.val;
 		}
+
 		if (node.brk) {
 			line += ";\n";
 		}
 		prevNode = node;
 	});
 	if (line) {
-		result += root ? "return " + line : line;
+		result += type === "root" ? "return " + line : line;
 	}
-	if (parent.type === "brackets") {
+	if (parent.type === "brackets" && !skipBrackets) {
 		result += parent.data.close;
 	}
 	return result;

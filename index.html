@@ -74,9 +74,11 @@
 					}
 				
 				`;
-			const parsedExpr = parse.parseExpression(exp);
+
+			const exp2 = `let a = x.m.f[p.kek] ? t : r`;
+			const parsedExpr = parse.parseExpression(exp2);
 			console.log("expression", parsedExpr);
-			console.log("original", exp);
+			console.log("original", exp2);
 			console.log("format", parse.formatExpression(parsedExpr.root));
 		</script>
 	</body>
