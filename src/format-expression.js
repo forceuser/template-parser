@@ -99,7 +99,7 @@ function format (parent, type = "root", skipBrackets = false) {
 			}
 			line = "";
 			declaration = node.type === "keyword" && ["const", "let", "var"].includes(node.data.val);
-			leftSide = true;
+			// leftSide = true;
 		}
 
 
