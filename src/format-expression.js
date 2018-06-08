@@ -20,11 +20,44 @@ function isSign (node) {
 	return !["comment", "linebreak", ";"].includes(node.type);
 }
 
-function formatChain (chain, before, after) {
-	return `chain(${chain.map(i => i.data.val || format(i, "code", true)).join(",")})`;
+function formatChain (chain, before, after, isSet = false) {
+	let result = "";
+	let idx = 0;
+	let isLoc = chain[0] && chain[0].type !== "literal";
+	const assigmentExp = ["++", "--", "=", "+=", "-=", "*=", "/=", "%=", "**=", "<<=", ">>=", ">>>=", "&=", "^=", "|="];
+	isSet = isSet || (before && before.type === "operation" && ["++", "--"].includes(before.data.val)) ||
+		(after && after.type === "operation" && assigmentExp.includes(after.data.val));
+	let chainList = [];
+	const formatList = list => `${isLoc ? "_$cl" : "_$ch"}([${list.map(formatNode).join(",")}]${isLoc ? `${isSet ? ", true" : ", false"}` : `, () => ${list[0].data.val} ${isSet ? `, _$v => ${list[0].data.val}=_$v` : ""}`})`;
+	const formatNode = i => i.data.val ? (i.type === "literal" ? `"${i.data.val}"` : i.data.val) : format(i, "code", true);
+	while (idx < chain.length) {
+		const i = chain[idx];
+		const call = i.type === "brackets" && i.data.open === "(";
+		if (call) {
+			result = formatList(chainList);
+			result = `_$fn(${result}, [${format(i, "code", true, isSet)}])`;
+			isLoc = true;
+			chainList = [{data: {val: result}}];
+		}
+		else {
+			chainList.push(i);
+			isLoc = isLoc || (chainList.length === 1 && i.type !== "literal");
+			if (idx === chain.length - 1) {
+				if (isLoc && chainList.length === 1) {
+					result = formatNode(chainList[0]);
+				}
+				else {
+					result = formatList(chainList);
+				}
+			}
+		}
+		idx++;
+	}
+
+	return result;
 }
 
-function format (parent, type = "root", skipBrackets = false) {
+function format (parent, type = "root", skipBrackets = false, isSet = false) {
 	const nodes = parent.children || [];
 	const snodes = [];
 	let brk = false;
@@ -140,7 +173,7 @@ function format (parent, type = "root", skipBrackets = false) {
 		else if (node.type === "brackets") {
 			const destructuring = leftSide && (declaration || (lineStart && parent.type === "brackets" && parent.data.open === "(")) && ["{", "["].includes(node.data.open);
 			const t = destructuring ? "destructuring" : (!node.fnArgs ? "code" : "brackets");
-			line += format(node, t);
+			line += format(node, t, null, isSet);
 		}
 
 		if (node.data.val && !skipOutput) {
@@ -154,7 +187,7 @@ function format (parent, type = "root", skipBrackets = false) {
 		prevNode = node;
 	});
 	if (line) {
-		result += type === "root" ? "return " + line : line;
+		result += type === "root" && !declaration ? "return " + line : line;
 	}
 	if (parent.type === "brackets" && !skipBrackets) {
 		result += parent.data.close;

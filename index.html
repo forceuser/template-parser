@@ -75,10 +75,11 @@
 				
 				`;
 
-			const exp2 = `let a = x.m.f[p.kek] ? t : r`;
-			const parsedExpr = parse.parseExpression(exp2);
+			// const exp2 = `a = x.m.f[p.kek] ? t : r`;
+			const exp3 = `a.b.c(1, "test-test".toString()).d()["foo"] = 5`;
+			const parsedExpr = parse.parseExpression(exp3);
 			console.log("expression", parsedExpr);
-			console.log("original", exp2);
+			console.log("original", exp3);
 			console.log("format", parse.formatExpression(parsedExpr.root));
 		</script>
 	</body>
