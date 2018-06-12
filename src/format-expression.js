@@ -25,17 +25,42 @@ function formatChain (chain, before, after, isSet = false) {
 	let idx = 0;
 	let isLoc = chain[0] && chain[0].type !== "literal";
 	const assigmentExp = ["++", "--", "=", "+=", "-=", "*=", "/=", "%=", "**=", "<<=", ">>=", ">>>=", "&=", "^=", "|="];
-	isSet = isSet || (before && before.type === "operation" && ["++", "--"].includes(before.data.val)) ||
-		(after && after.type === "operation" && assigmentExp.includes(after.data.val));
+	const isSetHere = (before && before.type === "operation" && ["++", "--"].includes(before.data.val)) ||
+	(after && after.type === "operation" && assigmentExp.includes(after.data.val));
+	isSet = isSet || isSetHere;
 	let chainList = [];
-	const formatList = list => `${isLoc ? "_$cl" : "_$ch"}([${list.map(formatNode).join(",")}]${isLoc ? `${isSet ? ", true" : ", false"}` : `, () => ${list[0].data.val} ${isSet ? `, _$v => ${list[0].data.val}=_$v` : ""}`})`;
+	const formatList = (list, isCall, args, isLast) => {
+		let result = isLoc ? `_$gl(${formatNode(list[0])},` : `_$g(`;
+		if (isLoc) {
+			list = list.slice(1);
+		}
+		result += isCall ? `[${args}],` : `false,`;
+		result += `[${list.map(formatNode).join(",")}],`;
+		if (!isLoc) {
+			result += `()=>${list[0].data.val}`;
+			if (isSet) {
+				result += `,_$v=>${list[0].data.val}=_$v`;
+			}
+		}
+		else {
+			result += isSet ? "true" : "false";
+		}
+
+		if (isLast) {
+			result += ", true).val";
+		}
+		else {
+			result += ")";
+		}
+		return result;
+	};
 	const formatNode = i => i.data.val ? (i.type === "literal" ? `"${i.data.val}"` : i.data.val) : format(i, "code", true);
 	while (idx < chain.length) {
 		const i = chain[idx];
 		const call = i.type === "brackets" && i.data.open === "(";
 		if (call) {
-			result = formatList(chainList);
-			result = `_$fn(${result}, [${format(i, "code", true, isSet)}])`;
+
+			result = formatList(chainList, true, format(i, "code", true, isSet));
 			isLoc = true;
 			chainList = [{data: {val: result}}];
 		}
@@ -47,7 +72,7 @@ function formatChain (chain, before, after, isSet = false) {
 					result = formatNode(chainList[0]);
 				}
 				else {
-					result = formatList(chainList);
+					result = formatList(chainList, false, null, isSetHere);
 				}
 			}
 		}

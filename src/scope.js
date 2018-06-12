@@ -13,7 +13,53 @@ export default class Scope {
 	new (scope) {
 		return new Scope([...this.stack, scope || {}]);
 	}
-	call (chain, callArgs) {
+	ng (callArgs, chain, getter, setter) {
+		let chainIdx = 0;
+		let value;
+		const isSet = !!setter;
+
+
+		try {
+			value = getter();
+			if (!callArgs && typeof setter === "function" && chain.length > 1 && isInvalid(value)) {
+				value = {};
+				setter(value);
+			}
+			chainIdx = 1;
+		}
+		catch (error) {/**/}
+
+		let context = value;
+		if (chainIdx === 0) { // find key in scope stack
+			let i = this.stack.length - 1;
+			const key = chain[0];
+			while (i >= 0) {
+				if (key in this.stack[i] || i === 0) {
+					context = this.stack[i];
+					break;
+				}
+				i--;
+			}
+		}
+
+		while (chainIdx < chain.length) {
+			const key = chain[chainIdx];
+			value = context[key];
+			if (chainIdx === chain.length - 1) {
+				return context[key] = val;
+			}
+			if (isInvalid(value)) {
+				value = {};
+				context[key] = value;
+			}
+			context = value;
+			chainIdx++;
+		}
+	}
+	call (fn, context, callArgs) {
+		if (fn && typeof fn === "function") {
+			fn();
+		}
 		return this.get(chain, null, callArgs);
 	}
 	get (chain, getter, callArgs) {
