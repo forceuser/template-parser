@@ -14,73 +14,82 @@
 				</div>`
 			));
 
-				console.log("expression1", parse.parseExpression(`
+			// 	console.log("expression1", parse.parseExpression(`
 				
-					"aaaa\\" bbbb cccc" "dddd"
-					123
-					"eeee"				
-				`));
+			// 		"aaaa\\" bbbb cccc" "dddd"
+			// 		123
+			// 		"eeee"				
+			// 	`));
 
-			const exp = `
-					const a = async (arg1 = 5, arg2, ...rest) => {
-						const [x, y, z = 3] = rest;
-						const {a, b, c: val = "def"} = arg2;
-						// this is one line comment
-						switch (a) {
-							case "aaa":
-								console.log("sdads");
-							break;
-							case "bbb":
-								console.log("sdads");
-							break;
-							default: console.log("sdads\\" sdasda asd");
-						}
+			// const exp = `
+			// 		const a = async (arg1 = 5, arg2, ...rest) => {
+			// 			const [x, y, z = 3] = rest;
+			// 			const {a, b, c: val = "def"} = arg2;
+			// 			// this is one line comment
+			// 			switch (a) {
+			// 				case "aaa":
+			// 					console.log("sdads");
+			// 				break;
+			// 				case "bbb":
+			// 					console.log("sdads");
+			// 				break;
+			// 				default: console.log("sdads\\" sdasda asd");
+			// 			}
 						
 
-						(abc)();
-						({sdasda: 1})["sdasda"];
+			// 			(abc)();
+			// 			({sdasda: 1})["sdasda"];
 						
 
-						(1).toString();
-						"sdas".toString();
-						[].toString();
-						const uuu = {}.toString(a, b, c);
+			// 			(1).toString();
+			// 			"sdas".toString();
+			// 			[].toString();
+			// 			const uuu = {}.toString(a, b, c);
 
-						for (let i = 0; i < b; i++) {
+			// 			for (let i = 0; i < b; i++) {
 
-						}
+			// 			}
 
-						/* this is
-						multiline
-						comment */
+			// 			/* this is
+			// 			multiline
+			// 			comment */
 
-						class XX extends Object {
-							constructor () {
-								const x = a ? b.d : c;
-							}
-							bb () {
+			// 			class XX extends Object {
+			// 				constructor () {
+			// 					const x = a ? b.d : c;
+			// 				}
+			// 				bb () {
 
-							}
-							static cc () {
+			// 				}
+			// 				static cc () {
 
-							}
-							get value () {
+			// 				}
+			// 				get value () {
 
-							}
-							abc () {
+			// 				}
+			// 				abc () {
 
-							}
-						}
-					}
+			// 				}
+			// 			}
+			// 		}
 				
-				`;
+			// 	`;
 
 			// const exp2 = `a = x.m.f[p.kek] ? t : r`;
-			const exp3 = `a.b.c(1, "test-test".toString()).d()["foo"] = 5`;
-			const parsedExpr = parse.parseExpression(exp3);
-			console.log("expression", parsedExpr);
-			console.log("original", exp3);
-			console.log("format", parse.formatExpression(parsedExpr.root));
+
+			const Scope = parse.Scope;
+			// const exp3 = `a.b.c(1, "test-test".toString()).d()["foo"] = 5`;
+			// const parsedExpr = parse.parseExpression(exp3);
+			// console.log("expression", parsedExpr);
+			// console.log("original", exp3);
+			// console.log("format", parse.formatExpression(parsedExpr.root));
+			const expTest = parse.formatExpression(parse.parseExpression(`fns.doSmth(x, 10)`).root);
+			console.log("EXPR", expTest);
+			const tpl = new Function("_$g", expTest);
+			const scope = new Scope({fns: {doSmth (a, b) {return `${a} -- ${b}`}}});
+			const scp = scope.new({x: 33});
+			console.log(tpl(scp.get));
+			
 		</script>
 	</body>
 </html>

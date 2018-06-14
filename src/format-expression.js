@@ -30,29 +30,28 @@ function formatChain (chain, before, after, isSet = false) {
 	isSet = isSet || isSetHere;
 	let chainList = [];
 	const formatList = (list, isCall, args, isLast) => {
-		let result = isLoc ? `_$gl(${formatNode(list[0])},` : `_$g(`;
+		let result = `_$g(`;
+		const locData = list[0];
 		if (isLoc) {
 			list = list.slice(1);
 		}
-		result += isCall ? `[${args}],` : `false,`;
 		result += `[${list.map(formatNode).join(",")}],`;
-		if (!isLoc) {
-			result += `()=>${list[0].data.val}`;
-			if (isSet) {
-				result += `,_$v=>${list[0].data.val}=_$v`;
+		result += isCall ? `[${args}],` : `null,`;
+		result += isLoc ? `true,` : `false,`;
+		if (isLoc) {
+			result += `${formatNode(locData)},`;
+			result += isLast ? "true" : "false";
+		}
+		else {
+			result += `()=>${locData.data.val}`;
+			if (isLast) {
+				result += `,_$v=>${locData.data.val}=_$v`;
 			}
 		}
-		else {
-			result += isSet ? "true" : "false";
-		}
-
-		if (isLast) {
-			result += ", true).val";
-		}
-		else {
-			result += ")";
-		}
+		result += isLast ? ").val" : ")";
 		return result;
+
+		// get(chain, callArgs, isLocal, getter/localData, setter);
 	};
 	const formatNode = i => i.data.val ? (i.type === "literal" ? `"${i.data.val}"` : i.data.val) : format(i, "code", true);
 	while (idx < chain.length) {
@@ -143,7 +142,7 @@ function format (parent, type = "root", skipBrackets = false, isSet = false) {
 		const codeNode = ["root", "code"].includes(type);
 		const blockStart = ((prevNode && prevNode.type === ",") || lineStart) && codeNode;
 		const argStart = ((prevNode && prevNode.type === ",") || lineStart) && type === "brackets";
-		const opStart = prevNode && ["operation", ":"].includes(prevNode.type) && !blockStart;
+		const opStart = prevNode && (["operation", ":"].includes(prevNode.type) || prevNode.type === "keyword") && !blockStart;
 		const chainable = ["literal", "number", "string"].includes(node.type) || (!declaration && leftSide);
 
 		// forceDeclaration ...rest exception
@@ -189,7 +188,7 @@ function format (parent, type = "root", skipBrackets = false, isSet = false) {
 
 
 			if (node.brk || op || isLast) {
-				skipOutput = node.brk || isLast;
+				skipOutput = !op && (node.brk || isLast);
 				const space = beforeChain && isLit(beforeChain) ? " " : "";
 				line += space + formatChain(chain, beforeChain, node);
 				chain = null;
