@@ -27,44 +27,69 @@ class View { // Basic class
 	}
 }
 
-class Cache () {
-	constructor () {
-		let storage = [];
-		let newStorage;
-		function cache (key, fn) {
-			let result;
-			if (key in storage) {
-				result = storage[key];
-				newStorage[key] = result;
-				return storage[key];
-			}
-			result = fn(new Cache());
-			newStorage[key] = result;
-			return result;
-		}
-		cache.begin = () => {
-			newStorage = [];
-		};
-		cache.end = () => {
-			storage = newStorage;
-		};
-
-		return cache;
-	}
-}
-
-
 
 new View({
 	model: {},
 	render ({cache}) {
-		return ["div", {}, [
-			...[1, 2].map(key => 
-				cache(key, cache => 
-					["span", {key}, [cache(0, )]]
+		return cache(cache => ["div", {}, [
+			...[1, 2].map(key =>
+				cache(key, cache =>
+					["span", {}, [cache(0, )]]
 				)
-			)
-		]]
-	}
+			),
+		]]);
 
-})
+		// или
+	},
+
+});
+
+class Store {
+	constructor () {
+		this.data = {};
+	}
+	set (key, data) {
+		this.data[key] = data;
+	}
+	has (key) {
+		this.activeKeys.add(key);
+		return this.data.hasOwnPropery(key);
+	}
+	get (key) {
+		return this.data[key];
+	}
+	begin () {
+		this.activeKeys = new Set();
+	}
+	end () {
+		Object.keys(this.data).forEach(key => {
+			if (!this.activeKeys.has(key)) {
+				this.data[key].unregister();
+				delete this.data[key];
+			}
+		});
+	}
+}
+
+
+class Layer {
+	constructor (buffer = false) {
+		this.store = new Store(buffer);
+		return (call, key) => {
+			if (this.store.has(key)) {
+				const res = this.store.get(key);
+				return res.reaction();
+			}
+			const layer = new Layer(true);
+			const domNode = document.createElement("div");
+			const res = reaction(() => {
+				layer.store.begin();
+				this.vnode = patch(this.vnode || domNode, call(layer));
+				layer.store.end();
+				return this.vnode;
+			}, false);
+			this.store.set(key, res);
+			return res.reaction();
+		};
+	}
+}
