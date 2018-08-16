@@ -4,21 +4,35 @@
 		<title>HEADE</title>
 	</head>
 	<body>
+		<script type="text/template">
+			<div @prop:attr="val" &on:click="alert('dasds')" $prop:value="a+b" :model="inputValue" attr-x="sdasd" a="sdas" $prop="{x:1, b: 2}">
+				{{#list items as item}}
+					innerText {{item.name}}
+				{{/list}}
+			</div>
+		</script>
+
 		<script src="./dist/parse.js"></script>
 		<script>
-			console.log("tpl", parse.parseTpl(
-				`<div @prfix:attr="val" attr-x="{{express}}">
-					{{#list items as item}}
-						innerText {{item.name}}
-					{{/list}}
-				</div>`
-			));
+			[...document.querySelectorAll(`script[type="text/template"]`)].forEach(templateNode => {
+				const tpl = templateNode.textContent;
+				console.log("res", parse.formatTpl(parse.parseTpl(tpl).root.children));
+			});
+
+
+			// console.log("tpl", parse.parseTpl(
+			// 	`<div @prfix:attr="val" attr-x="{{express}}">
+			// 		{{#list items as item}}
+			// 			innerText {{item.name}}
+			// 		{{/list}}
+			// 	</div>`
+			// ));
 
 			// 	console.log("expression1", parse.parseExpression(`
-				
+
 			// 		"aaaa\\" bbbb cccc" "dddd"
 			// 		123
-			// 		"eeee"				
+			// 		"eeee"
 			// 	`));
 
 			// const exp = `
@@ -35,11 +49,11 @@
 			// 				break;
 			// 				default: console.log("sdads\\" sdasda asd");
 			// 			}
-						
+
 
 			// 			(abc)();
 			// 			({sdasda: 1})["sdasda"];
-						
+
 
 			// 			(1).toString();
 			// 			"sdas".toString();
@@ -72,7 +86,7 @@
 			// 				}
 			// 			}
 			// 		}
-				
+
 			// 	`;
 
 			// const exp2 = `a = x.m.f[p.kek] ? t : r`;
@@ -83,13 +97,18 @@
 			// console.log("expression", parsedExpr);
 			// console.log("original", exp3);
 			// console.log("format", parse.formatExpression(parsedExpr.root));
-			const expTest = parse.formatExpression(parse.parseExpression(`fns.doSmth(x, 10)`).root);
-			console.log("EXPR", expTest);
-			const tpl = new Function("_$g", expTest);
-			const scope = new Scope({fns: {doSmth (a, b) {return `${a} -- ${b}`}}});
-			const scp = scope.new({x: 33});
-			console.log(tpl(scp.get));
-			
+
+
+
+			// const expTest = parse.formatExpression(parse.parseExpression(`fns.doSmth(x, 10)`).root);
+			// console.log("EXPR", expTest);
+			// const tpl = new Function("_$g", expTest);
+			// const scope = new Scope({fns: {doSmth (a, b) {return `${a} -- ${b}`}}});
+			// const scp = scope.new({x: 33});
+			// console.log(tpl(scp.get));
+
+
+
 		</script>
 	</body>
 </html>

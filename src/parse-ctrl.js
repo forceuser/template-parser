@@ -9,6 +9,27 @@ function getLineNumber (str, idx) {
 	return i - 1;
 }
 
+function merge (current, update) {
+	Object.keys(update).forEach((key) => {
+		// if update[key] exist, and it's not a string or array,
+		// we go in one level deeper
+		if (
+			current.hasOwnProperty(key) &&
+			typeof current[key] === "object" &&
+			!(current[key] instanceof Array)
+		) {
+			merge(current[key], update[key]);
+
+			// if update[key] doesn't exist in current, or it's a string
+			// or array, then assign/overwrite current[key] to update[key]
+		}
+		else {
+			current[key] = update[key];
+		}
+	});
+	return current;
+}
+
 export default class ParseCtrl {
 	constructor (text, idx = 0) {
 		this.text = text;
@@ -30,10 +51,17 @@ export default class ParseCtrl {
 	}
 	add (type, params) {
 		const ctrl = this;
-		const node = Object.assign({children: [], start: this.lastIdx, end: this.idx, data: {}}, params, {type});
+		const node = Object.assign(
+			{children: [], start: this.lastIdx, end: this.idx, data: {}},
+			params,
+			{type}
+		);
 		Object.defineProperty(node, "text", {
 			get () {
-				return ctrl.text.substring(node.start, node.end || ctrl.text.length);
+				return ctrl.text.substring(
+					node.start,
+					node.end || ctrl.text.length
+				);
 			},
 		});
 		this.node.children.push(node);
@@ -48,9 +76,9 @@ export default class ParseCtrl {
 		return node;
 	}
 	end (params) {
-		const node = this.stack.pop();
+		let node = this.stack.pop();
 		if (params) {
-			Object.assign(node, params);
+			node = merge(node, params);
 		}
 		node.end = this.idx;
 		node.lineEnd = getLineNumber(this.text, node.end);

@@ -51,34 +51,40 @@ export default function parse (text) {
 			}
 		},
 		startAttr () {
-			const match = ctrl.match(/^(@[a-z]+)?:?([a-z-]+)?(?:=(["']))?/i);
+			const match = ctrl.match(/^([@&$:][a-z]+)?:?([a-z-]+)?(?:=(["']))?/i);
 			if (match && match[0]) {
-				const [full, prefix, attr, quote] = match;
+				let [full, prefix, attr, quote] = match;
+				const prefixType = prefix ? prefix[0] : null;
+				if (prefix) {
+					prefix = prefix.substr(1);
+				}
 				if (quote) {
-					ctrl.start("attr", {data: {attr, prefix, quote}});
+					ctrl.start("attr", {data: {attr, prefix, prefixType, quote}});
 					ctrl.go(full.length);
 				}
 				else {
 					ctrl
 						.go(full.length)
-						.add("attr", {data: {attr, prefix}});
+						.add("attr", {data: {attr, prefix, prefixType}});
 				}
 				return true;
 			}
 		},
 		attr () {
 			const matchExpr = ctrl.match(startExp);
-			if (matchExpr) {
-				ctrl.go(startExp.length);
+			if (["&", "$", "=", ":"].includes(ctrl.node.data.prefixType)) {
 				ctrl.startCopy();
 				let m;
-				const matcher = `${endExp}${ctrl.node.data.quote}`;
+				const matcher = `${ctrl.node.data.quote}`;
 				while (!m && !ctrl.isEnd()) {
 					m = ctrl.match(matcher);
 					!m && ctrl.go();
 				}
 				if (m) {
 					const expression = ctrl.endCopy();
+					// if (ctrl.node.data.prefixType === "&") {
+					// 	expression = `()=>(${expression})`;
+					// }
 					ctrl.go(matcher.length).end({data: {expression}});
 				}
 			}
